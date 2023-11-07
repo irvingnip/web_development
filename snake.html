@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Snake Game</title>
+    </head>
+<body>
+    <div id = "score">0</div>
+    <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <footer id ="footer">@Developed by Irving</footer>
+    <style>
+        #gameCanvas{
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #score{
+            text-align: center;
+            font-size: 120px;
+            font-family:Arial, Helvetica, sans-serif;
+        }
+
+        #footer{
+            text-align: center;
+            bottom: 0;
+            width: auto;
+            height: auto;
+        }
+
+    </style>
+
+</body>
+
+    <script>
+    /** constants **/
+    const game_speed = 100;
+    const canvas_border_color = 'black';
+    const canvas_background_color = "white";
+    const snake_color = "lightgreen";
+    const snake_border_color = "darkgreen";
+    const food_color = "red";
+    const food_border_color = "darkred";
+
+    let snake = [
+        {x:150, y:150},
+        {x:140, y:150},
+        {x:130, y:150},
+        {x:120, y:150},
+        {x:110, y:150}
+    ]
+    //the player's score
+    let score = 0;
+    // when set to true the snake is changing direction
+    let changingDirection = false;
+    // set the food coordinates
+    let foodX;
+    let foodY;
+    // horizontal velocity
+    let dx = 10;
+    // vertical velocity
+    let dy = 0;
+ 
+    // get the canvas element
+    var gameCanvas = document.getElementById("gameCanvas");
+    // return a two dimensional drawing context
+    var ctx = gameCanvas.getContext("2d");
+
+    // start the game
+    main();
+
+    // create the first food
+    createFood();
+
+    // call changeDirction whenever a key is pressed
+    document.addEventListener("keydown", changeDirection);
+
+    // main function of the game
+    // called repeatedly to advance the snake
+    function main(){
+        if(GameOver()) return;
+
+        setTimeout(function onTick(){
+            changingDirection = false;
+            clearCanvas();
+            drawFood();
+            advanceSnake();
+            drawSnake();
+
+            // call the game again
+            main();
+        }, game_speed)
+    }
+
+    // fill the canvas and draw a border around it
+    function clearCanvas(){
+        ctx.fillStyle = canvas_background_color;
+        ctx.strokestyle = canvas_border_color;
+        //draw a "filled" rectangle to cover the entire canvas
+        ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+        //draw a "border" around the entire canvas
+        ctx.strokeRect(0, 0, gameCanvas.width, gameCanvas.height);
+    }
+
+    /* draw the snake on the canvas */
+    function drawSnake(){
+        /* use loop to draw each part of the snake */
+        snake.forEach(drawSnakePart)
+    }
+
+    /* draw a part of the snake */
+    function drawSnakePart(snakePart){
+        ctx.fillStyle = snake_color;
+        ctx.strokestyle = snake_border_color;
+        ctx.fillRect(snakePart.x, snakePart.y, 10, 10);
+        ctx.strokeRect(snakePart.x, snakePart.y, 10, 10);
+    }
+
+    // draw the food on the canvas
+    function drawFood(){
+        ctx.fillStyle = food_color;
+        ctx.strokestyle = food_border_color;
+        ctx.fillRect(foodX, foodY, 10, 10);
+        ctx.strokeRect(foodX, foodY, 10, 10);
+    }
+
+    //create random set of coordinates for the food
+    function randomTen(min, max){
+        return Math.round((Math.random()*(max-min)+min)/10)*10;
+    }
+
+    function createFood(){
+        foodX = randomTen(0, gameCanvas.width-10);
+        foodY = randomTen(0, gameCanvas.height-10);
+
+        // if the new food location is where the snake currently is
+        // then generate a new one
+        snake.forEach(function isFoodOnSnake(part){
+            const foodIsOnSnake = part.x == foodX && part.y == foodY;
+            if(foodIsOnSnake) createFood();
+        });
+    }
+
+    // advance the snake by changing the x-coordinates of its parts
+    // according to the horizontal velocity and the y-coordinates of its parts
+    // according to the vertical velocity
+    function advanceSnake(){
+        const head = {x:snake[0].x + dx, y:snake[0].y + dy};
+        snake.unshift(head);
+
+        const didEatFood = snake[0].x === foodX && snake[0].y === foodY;
+        // generate new food location
+        if(didEatFood){
+            score += 10;
+            document.getElementById("score").innerHTML = score;
+            createFood();
+        }else{
+            // remove the last part of the snake body
+            snake.pop();
+        }
+    }
+
+    // change the direction according to the key pressed
+    function changeDirection(event){
+        const left_key = 37;
+        const right_key = 39;
+        const up_key = 38;
+        const down_key = 40;
+
+        if(changingDirection) return;
+        changingDirection = true;
+
+        const keyPressed = event.keyCode;
+        const goingUp = dy === -10;
+        const goingDown = dy === 10;
+        const goingRight = dx === 10;
+        const goingLeft = dx === -10;
+
+        if(keyPressed === left_key && !goingRight){
+            dx = -10;
+            dy = 0;
+        }
+        if(keyPressed === right_key && !goingLeft){
+            dx = 10;
+            dy = 0;
+        }
+        if(keyPressed === up_key && !goingDown){
+            dx = 0;
+            dy = -10;
+        }
+        if(keyPressed === down_key && !goingDown){
+            dx = 0;
+            dy = 10;
+        }
+    }
+    function GameOver(){
+        for(let i = 4; i<snake.length; i++){
+            if(snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true
+        }
+
+        const hitLeftWall = snake[0].x < 0;
+        const hitRightWall = snake[0].x > gameCanvas.width - 10;
+        const hitTopWall = snake[0].y < 0;
+        const hitBottomWall = snake[0].y > gameCanvas.height - 10;
+
+        return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall
+    }
+    </script>
+</html>
