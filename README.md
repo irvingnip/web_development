@@ -1,0 +1,1 @@
+The game Snake is developed by HTML, CSS, and JavaScript based on the tutorial of Panayiotis Nicolaou.(https://www.freecodecamp.org/news/think-like-a-programmer-how-to-build-snake-using-only-javascript-html-and-css-7b1479c3339e/)
